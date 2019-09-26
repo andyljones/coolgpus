@@ -26,9 +26,6 @@ T_MIN, T_MAX = args.temp
 S_MIN, S_MAX = args.speed
 T_HYST =  args.hyst
 
-# Sometimes the lower display numbers are occupied. This is a dumb way of dodging them.
-BASE_DISPLAY = 10
-
 # EDID for an arbitrary display
 EDID = b'\x00\xff\xff\xff\xff\xff\xff\x00\x10\xac\x15\xf0LTA5.\x13\x01\x03\x804 x\xee\x1e\xc5\xaeO4\xb1&\x0ePT\xa5K\x00\x81\x80\xa9@\xd1\x00qO\x01\x01\x01\x01\x01\x01\x01\x01(<\x80\xa0p\xb0#@0 6\x00\x06D!\x00\x00\x1a\x00\x00\x00\xff\x00C592M9B95ATL\n\x00\x00\x00\xfc\x00DELL U2410\n  \x00\x00\x00\xfd\x008L\x1eQ\x11\x00\n      \x00\x1d'
 
@@ -93,9 +90,6 @@ def query(bus, field):
 def temperature(bus):
     return int(query(bus, 'temperature.gpu'))
 
-def displayed(bus):
-    return query(bus, 'display_active') == 'Enabled'
-
 def config(bus):
     """Writes out the X server config for a GPU to a temporary directory"""
     tempdir = mkdtemp(prefix='cool-gpu-' + bus)
@@ -111,7 +105,7 @@ def config(bus):
 def xserver(display, bus):
     """Starts the X server for a GPU under a certain display ID""" 
     conf = config(bus)
-    args = ['Xorg', display, '-keeptty', '-once', '-novtswitch', 'vt'+display[1:], '-config', conf]
+    args = ['Xorg', display, '-keeptty', '-once', '-config', conf]
     proc = Popen(args, stdout=PIPE, stderr=STDOUT)
     print('Starting xserver: '+' '.join(args))
     return proc
@@ -123,7 +117,7 @@ def xservers(buses):
     displays, servers = {}, {}
     try:
         for d, bus in enumerate(buses):
-            displays[bus] = ':' + str(BASE_DISPLAY+d)
+            displays[bus] = ':' + str(d)
             servers[bus] = xserver(displays[bus], bus)
         yield displays
     finally:
@@ -175,7 +169,7 @@ def manage_fans(displays):
             print('Released fan speed control for GPU at '+display)
 
 def run():
-    buses = [bus for bus in gpu_buses() if not displayed(bus)]
+    buses = gpu_buses() 
     with xservers(buses) as displays:
         manage_fans(displays)
 
