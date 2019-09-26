@@ -16,19 +16,26 @@ This script lets you set a custom GPU fan curve on a headless Linux server.
 ```
 
 ### Instructions
-Copy the `fans.py` script into a local directory and run
 ```
-python fans.py --speed 99 99 
+pip install coolgpus
+coolgpus --speed 99 99
 ``` 
 If you hear your server take off, it works! Now interrupt it and re-run either with Sensible Defaults (TM),
 ```
-python fans.py
+coolgpus
 ```
-or you can pass your own parameters with 
+or you can pass your own fan curve with 
 ```
-python fans.py --temp 17 84 --speed 15 99 
+coolgpus --temp 17 84 --speed 15 99 
 ```
 This will make the fan speed increase linearly from 15% at 17C to 99% at 84C.  You can also increase `--hyst` if you want to smooth out oscillations, at the cost of the fans possibly going faster than they need to.
+
+### Troubleshooting
+* `coolgpus: command not found`: the pip script folder probably isn't on your PATH. On Ubuntu with the apt-get-installed pip, look in `~/.local/bin`.
+* General troubleshooting: 
+    * Check that `XOrg`, `nvidia-settings` and `nvidia-smi` can all be called from your terminal. 
+    * Check if `sudo coolgpus` works. 
+    * Open `coolgpus` in a text editor, add a `import pdb; pdb.set_trace()` somewhere, and [explore till you hit the error](https://docs.python.org/3/library/pdb.html#debugger-commands). 
 
 ### Why's this necessary?
 If you want to install multiple GPUs in a single machine, you have to use blower-style GPUs else the hot exhaust builds up in your case. Blower-style GPUs can get _very loud_, so to avoid annoying customers nvidia artifically limits their fans to ~50% duty. At 50% duty and a heavy workload, blower-style GPUs will hot up to 85C or so and throttle themselves. 
@@ -39,9 +46,6 @@ This script does all that for you.
 
 ### How it works
 When you run `fans.py`, it sets up a temporary X server for each GPU with a fake display attached. Then, it loops over the GPUs every few seconds and sets the fan speed according to their temperature. When the script dies, it returns control of the fans to the drivers and cleans up the X servers.
-
-### I want a different curve
-The fan speeds are calculated from the `TEMPS` and `SPEEDS` arrays in the script; alter them if you'd like something different.
 
 ### It doesn't work
 Check that you've got `XOrg`, `nvidia-settings` and `nvidia-smi` on the `PATH`. Check you don't have a display attached. Otherwise, add breakpoints and print statements till you figure it out!
