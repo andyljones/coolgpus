@@ -8,8 +8,10 @@ from contextlib import contextmanager
 # This is a clamped linear fan curve, going from 30% below 55C to 99% above 80C.
 # I can't claim it's optimal, but it gets my GPUs to stabilize at 75C and 80%, which is cool enough I'm not worried 
 # about throttling or lifespan. 
-TEMPS  = (55, 80)
-SPEEDS = (30, 99)
+T_MIN, T_MAX = 50, 80
+S_MIN, S_MAX = 30, 99
+
+SCALE = (S_MAX - S_MIN)/float(T_MAX - T_MIN)**2
 
 # EDID for an arbitrary display
 EDID = b'\x00\xff\xff\xff\xff\xff\xff\x00\x10\xac\x15\xf0LTA5.\x13\x01\x03\x804 x\xee\x1e\xc5\xaeO4\xb1&\x0ePT\xa5K\x00\x81\x80\xa9@\xd1\x00qO\x01\x01\x01\x01\x01\x01\x01\x01(<\x80\xa0p\xb0#@0 6\x00\x06D!\x00\x00\x1a\x00\x00\x00\xff\x00C592M9B95ATL\n\x00\x00\x00\xfc\x00DELL U2410\n  \x00\x00\x00\xfd\x008L\x1eQ\x11\x00\n      \x00\x1d'
@@ -106,11 +108,19 @@ def xservers(buses):
             print('Terminating xserver for display ' + displays[bus])
             server.terminate()
 
-def target_speed(temp):
-    (lt, ut), (ls, us) = TEMPS, SPEEDS
-    load = float(temp - lt)/float(ut - lt)
-    load = min(max(load, 0), 1)
-    return int(us*load + ls*(1 - load))
+def min_speed(t):
+    if t < T_MIN:
+        return S_MIN
+    return int(min(SCALE*(t - T_MIN)**2 + S_MIN, S_MAX))
+
+def max_speed(t):
+    if t > T_MAX:
+        return S_MAX
+    return int(max(S_MAX - SCALE*(t - T_MAX)**2, S_MIN))
+
+def target_speed(s, t):
+    l, u = min_speed(t), max_speed(t)
+    return min(max(s, l), u), l, u
 
 def assign(display, command):
     # Our duct-taped-together xorg.conf leads to some innocent - but voluminous - warning messages about
@@ -127,12 +137,17 @@ def manage_fans(displays):
     to the GPU temperature. When interrupted, it releases the fan control back to the driver and shuts down the
     X servers"""
     try:
+        speeds = {b: 0 for b in displays}
         while True:
             for bus, display in displays.items():
                 temp = temperature(bus)
-                target = target_speed(temp)
-                set_speed(display, target)
-                print('GPU at '+display+' is '+str(temp)+'C, setting target speed to '+str(target)+'%')
+                s, l, u = target_speed(speeds[bus], temp)
+                if s != speeds[bus]:
+                    set_speed(display, s)
+                    speeds[bus] = s
+                    print('GPU {}, {}C -> [{}%-{}%]. Setting speed to {}%'.format(display, temp, l, u, s))
+                else:
+                    print('GPU {}, {}C -> [{}%-{}%]. Leaving speed at {}%'.format(display, temp, l, u, s))
             time.sleep(5)
     finally:
         for bus, display in displays.items():
