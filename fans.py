@@ -60,7 +60,8 @@ EndSection
 """ 
 
 def decimalize(bus):
-    """Drop the domain and convert each hex part to decimal"""
+    """Converts a bus ID to an xconf-friendly format by dropping the domain and converting each hex component to 
+    decimal"""
     return ':'.join([str(int('0x' + p, 16)) for p in re.split('[:.]', bus[9:])])
 
 def gpu_buses():
@@ -71,6 +72,7 @@ def temperature(bus):
     return int(temp)
 
 def config(bus):
+    """Writes out the X server config for a GPU to a temporary directory"""
     tempdir = mkdtemp(prefix='cool-gpu-' + bus)
     edid = os.path.join(tempdir, 'edid.bin')
     conf = os.path.join(tempdir, 'xorg.conf')
@@ -82,12 +84,15 @@ def config(bus):
     return conf
 
 def xserver(display, bus):
+    """Starts the X server for a GPU under a certain display ID""" 
     conf = config(bus)
     proc = Popen(['Xorg', display, '-once', '-config', conf], stdout=PIPE, stderr=STDOUT)
     return proc
 
 @contextmanager
 def xservers(buses):
+    """A context manager for launching an X server for each GPU in a list. Yields the mapping from bus ID to 
+    display ID, and cleans up the X servers on exit."""
     displays, servers = {}, {}
     try:
         for d, bus in enumerate(buses):
@@ -117,6 +122,9 @@ def set_speed(display, target):
     assign(display, '[fan:0]/GPUTargetFanSpeed='+str(int(target)))
 
 def manage_fans(displays):
+    """Launches an X server for each GPU, then continually loops over the GPU fans to set their speeds according
+    to the GPU temperature. When interrupted, it releases the fan control back to the driver and shuts down the
+    X servers"""
     try:
         while True:
             for bus, display in displays.items():
