@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 import os
 import re
 import time
@@ -102,7 +102,9 @@ def config(bus):
 def xserver(display, bus):
     """Starts the X server for a GPU under a certain display ID""" 
     conf = config(bus)
-    proc = Popen(['Xorg', display, '-once', '-config', conf], stdout=PIPE, stderr=STDOUT)
+    args = ['Xorg', display, '-once', '-novtswitch', 'vt3', '-config', conf]
+    proc = Popen(args, stdout=PIPE, stderr=STDOUT)
+    print('Starting xserver: '+' '.join(args))
     return proc
 
 @contextmanager
@@ -112,8 +114,7 @@ def xservers(buses):
     displays, servers = {}, {}
     try:
         for d, bus in enumerate(buses):
-            displays[bus] = ':' + str(d)
-            print('Starting xserver for display ' + displays[bus])
+            displays[bus] = ':' + str(d+10)
             servers[bus] = xserver(displays[bus], bus)
         yield displays
     finally:
