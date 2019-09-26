@@ -6,10 +6,12 @@ from tempfile import mkdtemp
 from contextlib import contextmanager
 
 # This is a clamped linear fan curve, going from 30% below 55C to 99% above 80C.
-# I can't claim it's optimal, but it gets my GPUs to stabilize at 75C and 80%, which is cool enough I'm not worried 
+# There's a small hysteresis gap because _changes_ in fan noise are a lot more distracting than steady fan noise. 
+# I can't claim it's optimal, but it Works For My Machine (TM). Full load is about 75C and 80%.
 # about throttling or lifespan. 
-T_MIN, T_MAX = 50, 80
+T_MIN, T_MAX = 55, 80
 S_MIN, S_MAX = 30, 99
+T_HYST = 2 
 
 SCALE = (S_MAX - S_MIN)/float(T_MAX - T_MIN)**2
 
@@ -109,14 +111,11 @@ def xservers(buses):
             server.terminate()
 
 def min_speed(t):
-    if t < T_MIN:
-        return S_MIN
-    return int(min(SCALE*(t - T_MIN)**2 + S_MIN, S_MAX))
+    load = (t - T_MIN)/float(T_MAX - T_MIN)
+    return int(min(max(S_MIN + (S_MAX - S_MIN)*load, S_MIN), S_MAX))
 
 def max_speed(t):
-    if t > T_MAX:
-        return S_MAX
-    return int(max(S_MAX - SCALE*(t - T_MAX)**2, S_MIN))
+    return min_speed(t + T_HYST)
 
 def target_speed(s, t):
     l, u = min_speed(t), max_speed(t)
