@@ -5,11 +5,10 @@ from subprocess import check_output, Popen, PIPE, STDOUT
 from tempfile import mkdtemp
 from contextlib import contextmanager
 
-# These are the steps on the fan curve, as taken from Boris Dimitriov's script
-# I don't think it's optimal, but it does the job of removing the fan speed cap
-# Temps are in degrees centigrade, as reported by nvidia-smi, and speeds are a throttle percentage
-TEMPS  = [30, 34, 38, 40, 43, 49, 54, 61, 65, 70, 77, float('Inf')]
-SPEEDS = [20, 30, 40, 45, 50, 60, 65, 75, 80, 85, 90, 95]
+# This is a clamped linear fan curve, going from 20% below 40C to 99% above 75C.
+# I don't think it's optimal, but gets the fan-speed-cap-removal job done.
+TEMPS  = (40, 75)
+SPEEDS = (20, 99)
 
 # EDID for an arbitrary display
 EDID = b'\x00\xff\xff\xff\xff\xff\xff\x00\x10\xac\x15\xf0LTA5.\x13\x01\x03\x804 x\xee\x1e\xc5\xaeO4\xb1&\x0ePT\xa5K\x00\x81\x80\xa9@\xd1\x00qO\x01\x01\x01\x01\x01\x01\x01\x01(<\x80\xa0p\xb0#@0 6\x00\x06D!\x00\x00\x1a\x00\x00\x00\xff\x00C592M9B95ATL\n\x00\x00\x00\xfc\x00DELL U2410\n  \x00\x00\x00\xfd\x008L\x1eQ\x11\x00\n      \x00\x1d'
@@ -102,10 +101,10 @@ def xservers(buses):
             server.terminate()
 
 def target_speed(temp):
-    for threshold, speed in zip(TEMPS[::-1], SPEEDS[::-1]):
-        if temp < threshold:
-            target = speed
-    return target
+    (lt, ut), (ls, us) = TEMPS, SPEEDS
+    load = float(temp - lt)/float(ut - lt)
+    load = min(max(load, 0), 1)
+    return int(us*load + ls*(1 - load))
 
 def assign(display, command):
     # Our duct-taped-together xorg.conf leads to some innocent - but voluminous - warning messages about
@@ -115,7 +114,7 @@ def assign(display, command):
 
 def set_speed(display, target):
     assign(display, '[gpu:0]/GPUFanControlState=1')
-    assign(display, '[fan:0]/GPUTargetFanSpeed='+str(target))
+    assign(display, '[fan:0]/GPUTargetFanSpeed='+str(int(target)))
 
 def manage_fans(displays):
     try:
