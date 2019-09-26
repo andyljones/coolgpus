@@ -15,7 +15,7 @@ This script lets you set a custom GPU fan curve on a headless Linux server.
 +-------------------------------+----------------------+----------------------+
 ```
 
-### Headless Instructions
+### Instructions
 ```
 pip install coolgpus
 coolgpus --speed 99 99
@@ -30,13 +30,8 @@ coolgpus --temp 17 84 --speed 15 99
 ```
 This will make the fan speed increase linearly from 15% at 17C to 99% at 84C.  You can also increase `--hyst` if you want to smooth out oscillations, at the cost of the fans possibly going faster than they need to.
 
-### Partially Headed Instructions
-```
-pip install coolgpus
-sudo PATH=$PATH coolgpus
-```
-
 ### Troubleshooting
+* You've got a display attached: it won't work, but see [this issue](https://github.com/andyljones/coolgpus/issues/1) for progress.
 * `coolgpus: command not found`: the pip script folder probably isn't on your PATH. On Ubuntu with the apt-get-installed pip, look in `~/.local/bin`.
 * General troubleshooting: 
     * Check that `XOrg`, `nvidia-settings` and `nvidia-smi` can all be called from your terminal. 
