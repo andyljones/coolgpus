@@ -111,7 +111,7 @@ def config(bus):
 def xserver(display, bus):
     """Starts the X server for a GPU under a certain display ID""" 
     conf = config(bus)
-    args = ['Xorg', display, '-keeptty', '-once', '-novtswitch', 'vt'+display[1:], '-config', conf]
+    args = ['Xorg', display, '-once', '-novtswitch', 'vt'+display[1:], '-config', conf]
     proc = Popen(args, stdout=PIPE, stderr=STDOUT)
     print('Starting xserver: '+' '.join(args))
     return proc
