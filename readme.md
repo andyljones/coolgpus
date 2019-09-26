@@ -18,15 +18,15 @@ This script lets you set a custom GPU fan curve on a headless Linux server.
 ### Instructions
 ```
 pip install coolgpus
-sudo PATH=$PATH coolgpus --speed 99 99
+sudo $(which coolgpus) --speed 99 99
 ``` 
 If you hear your server take off, it works! Now interrupt it and re-run either with Sensible Defaults (TM),
 ```
-coolgpus
+sudo $(which coolgpus)
 ```
 or you can pass your own fan curve with 
 ```
-coolgpus --temp 17 84 --speed 15 99 
+sudo $(which coolgpus) --temp 17 84 --speed 15 99 
 ```
 This will make the fan speed increase linearly from 15% at 17C to 99% at 84C.  You can also increase `--hyst` if you want to smooth out oscillations, at the cost of the fans possibly going faster than they need to.
 

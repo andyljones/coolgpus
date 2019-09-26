@@ -105,7 +105,7 @@ def config(bus):
 def xserver(display, bus):
     """Starts the X server for a GPU under a certain display ID""" 
     conf = config(bus)
-    args = ['Xorg', display, '-keeptty', '-once', '-config', conf]
+    args = ['Xorg', display, '-once', '-config', conf]
     proc = Popen(args, stdout=PIPE, stderr=STDOUT)
     print('Starting xserver: '+' '.join(args))
     return proc
@@ -140,7 +140,7 @@ def assign(display, command):
     # Our duct-taped-together xorg.conf leads to some innocent - but voluminous - warning messages about
     # failing to authenticate. Here we dispose of them by redirecting STDERR to STDOUT and calling it in
     # check_output.
-    check_output(['nvidia-settings', '-a', command], env={'DISPLAY': display}, stderr=STDOUT)
+    check_output(['nvidia-settings', '-a', command, '-c', display], stderr=STDOUT)
 
 def set_speed(display, target):
     assign(display, '[gpu:0]/GPUFanControlState=1')
