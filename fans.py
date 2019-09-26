@@ -5,10 +5,11 @@ from subprocess import check_output, Popen, PIPE, STDOUT
 from tempfile import mkdtemp
 from contextlib import contextmanager
 
-# This is a clamped linear fan curve, going from 20% below 40C to 99% above 75C.
-# I don't think it's optimal, but gets the fan-speed-cap-removal job done.
-TEMPS  = (40, 75)
-SPEEDS = (20, 99)
+# This is a clamped linear fan curve, going from 30% below 55C to 99% above 80C.
+# I can't claim it's optimal, but it gets my GPUs to stabilize at 75C and 80%, which is cool enough I'm not worried 
+# about throttling or lifespan. 
+TEMPS  = (55, 80)
+SPEEDS = (30, 99)
 
 # EDID for an arbitrary display
 EDID = b'\x00\xff\xff\xff\xff\xff\xff\x00\x10\xac\x15\xf0LTA5.\x13\x01\x03\x804 x\xee\x1e\xc5\xaeO4\xb1&\x0ePT\xa5K\x00\x81\x80\xa9@\xd1\x00qO\x01\x01\x01\x01\x01\x01\x01\x01(<\x80\xa0p\xb0#@0 6\x00\x06D!\x00\x00\x1a\x00\x00\x00\xff\x00C592M9B95ATL\n\x00\x00\x00\xfc\x00DELL U2410\n  \x00\x00\x00\xfd\x008L\x1eQ\x11\x00\n      \x00\x1d'
@@ -131,7 +132,7 @@ def manage_fans(displays):
                 temp = temperature(bus)
                 target = target_speed(temp)
                 set_speed(display, target)
-                print('GPU at '+display+' is '+str(temp)+'C, setting target speed to '+str(target))
+                print('GPU at '+display+' is '+str(temp)+'C, setting target speed to '+str(target)+'%')
             time.sleep(5)
     finally:
         for bus, display in displays.items():
