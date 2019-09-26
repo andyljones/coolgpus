@@ -30,6 +30,21 @@ sudo $(which coolgpus) --temp 17 84 --speed 15 99
 ```
 This will make the fan speed increase linearly from 15% at 17C to 99% at 84C.  You can also increase `--hyst` if you want to smooth out oscillations, at the cost of the fans possibly going faster than they need to.
 
+If your system uses systemd and you want to run this as a service, create a systemd unit file at `/etc/systemd/system/coolgpus.service`:
+
+```
+[Unit]
+Description=Headless GPU Fan Control
+After=syslog.target
+
+[Service]
+# You can find the script location with `which coolgpus`
+ExecStart=/home/ajones/conda/bin/coolgpus
+
+[Install]
+WantedBy=multi-user.target
+```
+
 ### Troubleshooting
 * You've got a display attached: it won't work, but see [this issue](https://github.com/andyljones/coolgpus/issues/1) for progress.
 * `coolgpus: command not found`: the pip script folder probably isn't on your PATH. On Ubuntu with the apt-get-installed pip, look in `~/.local/bin`.
