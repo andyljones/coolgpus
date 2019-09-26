@@ -18,13 +18,17 @@ This script lets you set a custom GPU fan curve on a headless Linux server.
 ### Instructions
 Copy the `fans.py` script into a local directory and run
 ```
-sudo python fans.py
+python fans.py --speed 99 99 
 ``` 
-The sudo is unavoidable unfortunately; both `nvidia-settings` and `XOrg` need it.
-
-If you want to check that it works, replace the `target = ...` line with `target = 99` and watch your server take off.
-
-When I've had reports that it works on more than just my machine, I'll turn this into a pip package.
+If you hear your server take off, it works! Now interrupt it and re-run either with Sensible Defaults (TM),
+```
+python fans.py
+```
+or you can pass your own parameters with 
+```
+python fans.py --temp 17 84 --speed 15 99 
+```
+This will make the fan speed increase linearly from 15% at 17C to 99% at 84C.  You can also increase `--hyst` if you want to smooth out oscillations, at the cost of the fans possibly going faster than they need to.
 
 ### Why's this necessary?
 If you want to install multiple GPUs in a single machine, you have to use blower-style GPUs else the hot exhaust builds up in your case. Blower-style GPUs can get _very loud_, so to avoid annoying customers nvidia artifically limits their fans to ~50% duty. At 50% duty and a heavy workload, blower-style GPUs will hot up to 85C or so and throttle themselves. 

@@ -1,19 +1,29 @@
 import os
 import re
 import time
+import argparse
 from subprocess import check_output, Popen, PIPE, STDOUT
 from tempfile import mkdtemp
 from contextlib import contextmanager
 
-# This is a clamped linear fan curve, going from 30% below 55C to 99% above 80C.
-# There's a small hysteresis gap because _changes_ in fan noise are a lot more distracting than steady fan noise. 
-# I can't claim it's optimal, but it Works For My Machine (TM). Full load is about 75C and 80%.
-# about throttling or lifespan. 
-T_MIN, T_MAX = 55, 80
-S_MIN, S_MAX = 30, 99
-T_HYST = 2 
+parser = argparse.ArgumentParser(description=r'''
+GPU fan control for Linux.
 
-SCALE = (S_MAX - S_MIN)/float(T_MAX - T_MIN)**2
+By default, this uses a clamped linear fan curve, going from 30% below 55C to 99%
+above 80C. There's also a small hysteresis gap, because _changes_ in fan noise 
+are a lot more distracting than steady fan noise. 
+
+I can't claim it's optimal, but it Works For My Machine (TM). Full load is about 
+75C and 80%.
+''')
+parser.add_argument('--temp', nargs=2, default=[55, 80], type=float, help='The temperature range where the fan speed will increase linearly')
+parser.add_argument('--speed', nargs=2, default=[30, 99], type=float, help='The minimum and maximum fan speeds')
+parser.add_argument('--hyst', nargs='?', default=2, type=float, help='The hysteresis gap. Large gaps will reduce how often the fan speed is changed, but might mean the fan runs faster than necessary')
+args = parser.parse_args()
+
+T_MIN, T_MAX = args.temp
+S_MIN, S_MAX = args.speed
+T_HYST =  args.hyst
 
 # EDID for an arbitrary display
 EDID = b'\x00\xff\xff\xff\xff\xff\xff\x00\x10\xac\x15\xf0LTA5.\x13\x01\x03\x804 x\xee\x1e\xc5\xaeO4\xb1&\x0ePT\xa5K\x00\x81\x80\xa9@\xd1\x00qO\x01\x01\x01\x01\x01\x01\x01\x01(<\x80\xa0p\xb0#@0 6\x00\x06D!\x00\x00\x1a\x00\x00\x00\xff\x00C592M9B95ATL\n\x00\x00\x00\xfc\x00DELL U2410\n  \x00\x00\x00\xfd\x008L\x1eQ\x11\x00\n      \x00\x1d'
