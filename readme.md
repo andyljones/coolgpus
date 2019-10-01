@@ -44,6 +44,11 @@ ExecStart=/home/ajones/conda/bin/coolgpus
 [Install]
 WantedBy=multi-user.target
 ```
+and then enable and start it with
+```
+sudo systemctl enable coolgpus
+sudo systemctl start coolgpus
+```
 
 ### Troubleshooting
 * You've got a display attached: it won't work, but see [this issue](https://github.com/andyljones/coolgpus/issues/1) for progress.
