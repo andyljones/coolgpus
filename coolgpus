@@ -75,15 +75,18 @@ Section "Monitor"
 EndSection
 """ 
 
-def log_output(command, filter=lambda l: True):
+def log_output(command):
     output = []
-    with Popen(command, stdout=PIPE, stderr=STDOUT) as p:
+    try:
+        p = Popen(command, stdout=PIPE, stderr=STDOUT)
         for line in p.stdout:
-            if filter(line.decode()): 
-                output.append(line.decode())
-                print(output[-1].strip())
-    assert(p.returncode == 0), 'Command ' + command + ' crashed with return code ' + str(p.returncode)
-    return output
+            output.append(line.decode().strip())
+        p.wait()
+    finally:
+        if p.returncode != 0:
+            print('Command ' + ' '.join(command) + ' crashed with return code ' + str(p.returncode) + ':')
+            print('\n'.join(output))
+        return '\n'.join(output)
 
 def decimalize(bus):
     """Converts a bus ID to an xconf-friendly format by dropping the domain and converting each hex component to 
@@ -129,6 +132,7 @@ def xservers(buses):
         for d, bus in enumerate(buses):
             displays[bus] = ':' + str(d)
             servers[bus] = xserver(displays[bus], bus)
+        time.sleep(5) # give the servers a moment to start, else we'll get an unnecessary warning message 
         yield displays
     finally:
         for bus, server in servers.items():
