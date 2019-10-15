@@ -77,7 +77,7 @@ EndSection
 
 def log_output(command, filter=lambda l: True):
     output = []
-    with Popen(command, shell=True, stdout=PIPE, stderr=STDOUT) as p:
+    with Popen(command, stdout=PIPE, stderr=STDOUT) as p:
         for line in p.stdout:
             if filter(line.decode()): 
                 output.append(line.decode())
@@ -91,10 +91,10 @@ def decimalize(bus):
     return ':'.join([str(int('0x' + p, 16)) for p in re.split('[:.]', bus[9:])])
 
 def gpu_buses():
-    return log_output('nvidia-smi --format=csv,noheader --query-gpu=pci.bus_id')
+    return log_output(['nvidia-smi', '--format=csv,noheader', '--query-gpu=pci.bus_id']).decode().splitlines()
 
 def query(bus, field):
-    [line] = log_output('nvidia-smi --format=csv,noheader --query-gpu='+field + ' -i' + bus).splitlines()
+    [line] = log_output(['nvidia-smi', '--format=csv,noheader', '--query-gpu='+field, '-i', bus]).decode().splitlines()
     return line
 
 def temperature(bus):
@@ -148,8 +148,8 @@ def target_speed(s, t):
 
 def assign(display, command):
     # Our duct-taped-together xorg.conf leads to some innocent - but voluminous - warning messages about
-    # failing to authenticate. 
-    log_output('nvidia-settings -a ' + command + ' -c ' + display)
+    # failing to authenticate. Here we dispose of them
+    log_output(['nvidia-settings', '-a', command, '-c', display])
 
 def set_speed(display, target):
     assign(display, '[gpu:0]/GPUFanControlState=1')
