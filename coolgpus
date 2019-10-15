@@ -119,9 +119,9 @@ def xserver(display, bus):
     """Starts the X server for a GPU under a certain display ID""" 
     conf = config(bus)
     args = ['Xorg', display, '-once', '-config', conf]
-    proc = Popen(args, stdout=PIPE, stderr=STDOUT)
     print('Starting xserver: '+' '.join(args))
-    return proc
+    p = Popen(args)
+    return p
 
 @contextmanager
 def xservers(buses):
@@ -132,7 +132,6 @@ def xservers(buses):
         for d, bus in enumerate(buses):
             displays[bus] = ':' + str(d)
             servers[bus] = xserver(displays[bus], bus)
-        time.sleep(1) # give the servers a moment to start
         yield displays
     finally:
         for bus, server in servers.items():
