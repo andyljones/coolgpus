@@ -84,8 +84,8 @@ def log_output(command):
         p.wait()
     finally:
         if p.returncode != 0:
-            print('Command ' + ' '.join(command) + ' crashed with return code ' + str(p.returncode) + ':')
             print('\n'.join(output))
+            raise ValueError('Command ' + ' '.join(command) + ' crashed with return code ' + str(p.returncode) + ':')
         return '\n'.join(output)
 
 def decimalize(bus):
