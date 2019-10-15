@@ -75,16 +75,26 @@ Section "Monitor"
 EndSection
 """ 
 
+def log_output(command, filter=lambda l: True):
+    output = []
+    with Popen(command, shell=True, stdout=PIPE, stderr=STDOUT) as p:
+        for line in p.stdout:
+            if filter(line.decode()): 
+                output.append(line.decode())
+                print(output[-1].strip())
+    assert(p.returncode == 0), 'Command ' + command + ' crashed with return code ' + str(p.returncode)
+    return output
+
 def decimalize(bus):
     """Converts a bus ID to an xconf-friendly format by dropping the domain and converting each hex component to 
     decimal"""
     return ':'.join([str(int('0x' + p, 16)) for p in re.split('[:.]', bus[9:])])
 
 def gpu_buses():
-    return check_output(['nvidia-smi', '--format=csv,noheader', '--query-gpu=pci.bus_id']).decode().splitlines()
+    return log_output('nvidia-smi --format=csv,noheader --query-gpu=pci.bus_id')
 
 def query(bus, field):
-    [line] = check_output(['nvidia-smi', '--format=csv,noheader', '--query-gpu='+field, '-i', bus]).decode().splitlines()
+    [line] = log_output('nvidia-smi --format=csv,noheader --query-gpu='+field + ' -i' + bus).splitlines()
     return line
 
 def temperature(bus):
@@ -138,9 +148,8 @@ def target_speed(s, t):
 
 def assign(display, command):
     # Our duct-taped-together xorg.conf leads to some innocent - but voluminous - warning messages about
-    # failing to authenticate. Here we dispose of them by redirecting STDERR to STDOUT and calling it in
-    # check_output.
-    check_output(['nvidia-settings', '-a', command, '-c', display], stderr=STDOUT)
+    # failing to authenticate. 
+    log_output('nvidia-settings -a ' + command + ' -c ' + display)
 
 def set_speed(display, target):
     assign(display, '[gpu:0]/GPUFanControlState=1')
