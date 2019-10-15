@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='coolgpus',
-    version='0.13',
+    version='0.14',
     description='GPU fan control for (partially?) headless Linux',
     url='https://github.com/andyljones/coolgpus',
     author='Andy L Jones',

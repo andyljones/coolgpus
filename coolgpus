@@ -84,8 +84,8 @@ def log_output(command):
         p.wait()
     finally:
         if p.returncode != 0:
-            print('Command ' + ' '.join(command) + ' crashed with return code ' + str(p.returncode) + ':')
             print('\n'.join(output))
+            raise ValueError('Command ' + ' '.join(command) + ' crashed with return code ' + str(p.returncode) + ':')
         return '\n'.join(output)
 
 def decimalize(bus):
@@ -132,7 +132,7 @@ def xservers(buses):
         for d, bus in enumerate(buses):
             displays[bus] = ':' + str(d)
             servers[bus] = xserver(displays[bus], bus)
-        time.sleep(5) # give the servers a moment to start, else we'll get an unnecessary warning message 
+        time.sleep(1) # give the servers a moment to start
         yield displays
     finally:
         for bus, server in servers.items():
