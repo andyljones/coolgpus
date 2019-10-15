@@ -94,10 +94,10 @@ def decimalize(bus):
     return ':'.join([str(int('0x' + p, 16)) for p in re.split('[:.]', bus[9:])])
 
 def gpu_buses():
-    return log_output(['nvidia-smi', '--format=csv,noheader', '--query-gpu=pci.bus_id']).decode().splitlines()
+    return log_output(['nvidia-smi', '--format=csv,noheader', '--query-gpu=pci.bus_id']).splitlines()
 
 def query(bus, field):
-    [line] = log_output(['nvidia-smi', '--format=csv,noheader', '--query-gpu='+field, '-i', bus]).decode().splitlines()
+    [line] = log_output(['nvidia-smi', '--format=csv,noheader', '--query-gpu='+field, '-i', bus]).splitlines()
     return line
 
 def temperature(bus):
@@ -132,7 +132,7 @@ def xservers(buses):
         for d, bus in enumerate(buses):
             displays[bus] = ':' + str(d)
             servers[bus] = xserver(displays[bus], bus)
-        time.sleep(5) # give the servers a moment to start, else we'll get an unnecessary warning message 
+        time.sleep(1) # give the servers a moment to start
         yield displays
     finally:
         for bus, server in servers.items():
