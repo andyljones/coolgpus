@@ -51,7 +51,7 @@ sudo systemctl start coolgpus
 ```
 
 ### Troubleshooting
-* You've got an X server hanging around for some reason: assuming you don't actually need it, run the script with `--kill`, which'll murder any existing X servers and let the script set up its own. 
+* You've got an X server hanging around for some reason: assuming you don't actually need it, run the script with `--kill`, which'll murder any existing X servers and let the script set up its own. Sometimes the OS [might automatically recreate its X servers](https://unix.stackexchange.com/questions/25668/how-to-close-x-server-to-avoid-errors-while-updating-nvidia-driver), and that's [tricky enough to handle that it's up to you to sort out](https://unix.stackexchange.com/questions/25668/how-to-close-x-server-to-avoid-errors-while-updating-nvidia-driver).
 * You've got a display attached: it won't work, but see [this issue](https://github.com/andyljones/coolgpus/issues/1) for progress.
 * `coolgpus: command not found`: the pip script folder probably isn't on your PATH. On Ubuntu with the apt-get-installed pip, look in `~/.local/bin`.
 * General troubleshooting: 

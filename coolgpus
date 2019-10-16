@@ -20,7 +20,7 @@ I can't claim it's optimal, but it Works For My Machine (TM). Full load is about
 parser.add_argument('--temp', nargs=2, default=[55, 80], type=float, help='The temperature range where the fan speed will increase linearly')
 parser.add_argument('--speed', nargs=2, default=[30, 99], type=float, help='The minimum and maximum fan speeds')
 parser.add_argument('--hyst', nargs='?', default=2, type=float, help='The hysteresis gap. Large gaps will reduce how often the fan speed is changed, but might mean the fan runs faster than necessary')
-parser.add_argument('--kill', action='store_true', default=False, type=bool, help='Whether to kill existing Xorg sessions')
+parser.add_argument('--kill', action='store_true', default=False, help='Whether to kill existing Xorg sessions')
 args = parser.parse_args()
 
 T_MIN, T_MAX = args.temp
@@ -76,7 +76,7 @@ Section "Monitor"
 EndSection
 """ 
 
-def log_output(command):
+def log_output(command, ok=(0,)):
     output = []
     try:
         p = Popen(command, stdout=PIPE, stderr=STDOUT)
@@ -84,7 +84,7 @@ def log_output(command):
             output.append(line.decode().strip())
         p.wait()
     finally:
-        if p.returncode != 0:
+        if p.returncode not in ok:
             print('\n'.join(output))
             raise ValueError('Command ' + ' '.join(command) + ' crashed with return code ' + str(p.returncode) + ':')
         return '\n'.join(output)
@@ -125,7 +125,7 @@ def xserver(display, bus):
     return p
 
 def xserver_pids():
-    return list(map(int, log_output(['pgrep', 'Xorg']).splitlines()))
+    return list(map(int, log_output(['pgrep', 'Xorg'], ok=(0, 1)).splitlines()))
 
 def kill_xservers():
     """If there are already X servers attach to the GPUs, they'll stop us from setting up our own. Right now we
@@ -135,10 +135,11 @@ def kill_xservers():
     if servers:
         if args.kill:
             print('Killing all running X servers, including ' + ", ".join(map(str, servers)))
-            log_output(['pkill', 'Xorg'])
+            log_output(['pkill', 'Xorg'], ok=(0, 1))
             for _ in range(10):
                 if xserver_pids():
                     print('Awaiting X server shutdown')
+                    time.sleep(1)
                 else:
                     print('All X servers killed')
                     return
