@@ -38,7 +38,6 @@ Description=Headless GPU Fan Control
 After=syslog.target
 
 [Service]
-# You can find the script location with `which coolgpus`
 ExecStart=/home/ajones/conda/bin/coolgpus
 
 [Install]
@@ -54,9 +53,11 @@ sudo systemctl start coolgpus
 * You've got an X server hanging around for some reason: assuming you don't actually need it, run the script with `--kill`, which'll murder any existing X servers and let the script set up its own. Sometimes the OS [might automatically recreate its X servers](https://unix.stackexchange.com/questions/25668/how-to-close-x-server-to-avoid-errors-while-updating-nvidia-driver), and that's [tricky enough to handle that it's up to you to sort out](https://unix.stackexchange.com/questions/25668/how-to-close-x-server-to-avoid-errors-while-updating-nvidia-driver).
 * You've got a display attached: it won't work, but see [this issue](https://github.com/andyljones/coolgpus/issues/1) for progress.
 * `coolgpus: command not found`: the pip script folder probably isn't on your PATH. On Ubuntu with the apt-get-installed pip, look in `~/.local/bin`.
+* You hit Ctrl+C twice and now your fans are stuck at a certain speed: run the script again and interrupt it _once_, then let it shut down gracefully. Double interrupts stop it from handing control back to the driver. Don't double-interrupt things you barbarian. 
 * General troubleshooting: 
+    * Read `coolgpus --help` 
+    * See if `sudo /path/to/coolgpus` actually works
     * Check that `XOrg`, `nvidia-settings` and `nvidia-smi` can all be called from your terminal. 
-    * Check if `sudo coolgpus` works. 
     * Open `coolgpus` in a text editor, add a `import pdb; pdb.set_trace()` somewhere, and [explore till you hit the error](https://docs.python.org/3/library/pdb.html#debugger-commands). 
 
 ### Why's this necessary?
