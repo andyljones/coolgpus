@@ -38,7 +38,9 @@ Description=Headless GPU Fan Control
 After=syslog.target
 
 [Service]
-ExecStart=/home/ajones/conda/bin/coolgpus
+ExecStart=/home/ajones/conda/bin/coolgpus --kill 
+Restart=on-failure
+RestartSec=5s
 
 [Install]
 WantedBy=multi-user.target
