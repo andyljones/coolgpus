@@ -28,7 +28,13 @@ or you can pass your own fan curve with
 ```
 sudo $(which coolgpus) --temp 17 84 --speed 15 99 
 ```
-This will make the fan speed increase linearly from 15% at 17C to 99% at 84C.  You can also increase `--hyst` if you want to smooth out oscillations, at the cost of the fans possibly going faster than they need to.
+This will make the fan speed increase linearly from 15% at <17C to 99% at >84C.  You can also increase `--hyst` if you want to smooth out oscillations, at the cost of the fans possibly going faster than they need to.
+
+To make the fan speed adjustments to be more flexible, you can specify a list of temperatures and speeds. You may think of it as specifying breaking points in a piece-wise function.
+```
+sudo $(which coolgpus) --temp 20 55 80 --speed 5 30 99
+```
+This will make the fan speed to be 5% if <20C; increase linearly from 5% at 20C to 30% at 55C; and from 30% at 55C to 99% at >80C. See #3 for a use-case.
 
 If your system uses systemd and you want to run this as a service, create a systemd unit file at `/etc/systemd/system/coolgpus.service` as per this template:
 
