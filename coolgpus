@@ -17,15 +17,17 @@ are a lot more distracting than steady fan noise.
 I can't claim it's optimal, but it Works For My Machine (TM). Full load is about 
 75C and 80%.
 ''')
-parser.add_argument('--temp', nargs=2, default=[55, 80], type=float, help='The temperature range where the fan speed will increase linearly')
-parser.add_argument('--speed', nargs=2, default=[30, 99], type=float, help='The minimum and maximum fan speeds')
+parser.add_argument('--temp', nargs='+', default=[20, 55, 80], type=float, help='The temperature ranges where the fan speed will increase linearly')
+parser.add_argument('--speed', nargs='+', default=[5, 30, 99], type=float, help='The fan speed ranges')
 parser.add_argument('--hyst', nargs='?', default=2, type=float, help='The hysteresis gap. Large gaps will reduce how often the fan speed is changed, but might mean the fan runs faster than necessary')
 parser.add_argument('--kill', action='store_true', default=False, help='Whether to kill existing Xorg sessions')
 args = parser.parse_args()
 
-T_MIN, T_MAX = args.temp
-S_MIN, S_MAX = args.speed
 T_HYST =  args.hyst
+
+assert len(args.temp) == len(args.speed), f'temp and speed should have the same length'
+assert len(args.temp) >= 2, f'Please, use at least two points for temp'
+assert len(args.speed) >= 2, f'Please, use at least two points for speed'
 
 # EDID for an arbitrary display
 EDID = b'\x00\xff\xff\xff\xff\xff\xff\x00\x10\xac\x15\xf0LTA5.\x13\x01\x03\x804 x\xee\x1e\xc5\xaeO4\xb1&\x0ePT\xa5K\x00\x81\x80\xa9@\xd1\x00qO\x01\x01\x01\x01\x01\x01\x01\x01(<\x80\xa0p\xb0#@0 6\x00\x06D!\x00\x00\x1a\x00\x00\x00\xff\x00C592M9B95ATL\n\x00\x00\x00\xfc\x00DELL U2410\n  \x00\x00\x00\xfd\x008L\x1eQ\x11\x00\n      \x00\x1d'
@@ -166,9 +168,40 @@ def xservers(buses):
             print('Terminating xserver for display ' + displays[bus])
             server.terminate()
 
+def belong_to_segment(a, t, b):
+    '''Checks if t is in (a, b). Uses chaining in comparison operators.'''
+    return a <= t < b
+
+def determine_segment(t):
+    '''
+    Determines which piece (segment) of a user-specified piece-wise function 
+    t belongs to. For example:
+        args.temp = [30, 50, 70, 90]
+        (segment 0) 30 (0 segment) 50 (1 segment) 70 (2 segment) 90 (segment 2)
+        args.speed = [10, 30, 50, 75]
+        (segment 0) 10 (0 segment) 30 (1 segment) 50 (2 segment) 75 (segment 2)
+    '''
+    # Assuming that args.temp and args.speed are sorted (not decreasing)
+    # TODO: assert it on the initialization
+    segments = zip(
+        args.temp[:-1], args.temp[1:],
+        args.speed[:-1], args.speed[1:]
+    )
+    # the loop exits when:
+    #   a) t is less than the min temp (returns: segment 0)
+    #   b) t belongs to a segment (returns: the segment)
+    #   c) t is higher than the max temp (return: the last segment)
+    for temp_a, temp_b, speed_a, speed_b in segments:
+        # a) or b)
+        if t < temp_a or belong_to_segment(temp_a, t, temp_b):
+            break
+    # c) and a), b) after the 'break'
+    return temp_a, temp_b, speed_a, speed_b
+
 def min_speed(t):
-    load = (t - T_MIN)/float(T_MAX - T_MIN)
-    return int(min(max(S_MIN + (S_MAX - S_MIN)*load, S_MIN), S_MAX))
+    temp_a, temp_b, speed_a, speed_b = determine_segment(t)
+    load = (t - temp_a)/float(temp_b - temp_a)
+    return int(min(max(speed_a + (speed_b - speed_a)*load, speed_a), speed_b))
 
 def max_speed(t):
     return min_speed(t + T_HYST)
