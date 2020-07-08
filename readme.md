@@ -30,12 +30,14 @@ sudo $(which coolgpus) --temp 17 84 --speed 15 99
 ```
 This will make the fan speed increase linearly from 15% at <17C to 99% at >84C.  You can also increase `--hyst` if you want to smooth out oscillations, at the cost of the fans possibly going faster than they need to.
 
-To make the fan speed adjustments to be more flexible, you can specify a list of temperatures and speeds. You may think of it as specifying breaking points in a piece-wise function.
+#### Piecewise Linear Control
+More generally, you can list any sequence of (increasing!) temperatures and speeds, and they'll be linearly interpolated:
 ```
 sudo $(which coolgpus) --temp 20 55 80 --speed 5 30 99
 ```
-This will make the fan speed to be 5% if <20C; increase linearly from 5% at 20C to 30% at 55C; and from 30% at 55C to 99% at >80C. See #3 for a use-case.
+Now the fan speed will be 5% at <20C, then increase linearly to 30% up to 55C, then again linearly to 99% up to 80C. 
 
+#### systemd
 If your system uses systemd and you want to run this as a service, create a systemd unit file at `/etc/systemd/system/coolgpus.service` as per this template:
 
 ```
@@ -47,6 +49,8 @@ After=syslog.target
 ExecStart=/home/ajones/conda/bin/coolgpus --kill 
 Restart=on-failure
 RestartSec=5s
+ExecStop=/bin/kill -2 $MAINPID
+KillMode=none 
 
 [Install]
 WantedBy=multi-user.target
@@ -79,4 +83,6 @@ This script does all that for you.
 When you run `fans.py`, it sets up a temporary X server for each GPU with a fake display attached. Then, it loops over the GPUs every few seconds and sets the fan speed according to their temperature. When the script dies, it returns control of the fans to the drivers and cleans up the X servers.
 
 ### Credit
-This is based on [this 2016 script](https://github.com/boris-dimitrov/set_gpu_fans_public) by [Boris Dimitrov](dimiroll@gmail.com), which is in turn based on [this 2011 script](https://sites.google.com/site/akohlmey/random-hacks/nvidia-gpu-coolness) by [Axel Kohlmeyer](akohlmey@gmail.com).
+* This is based on [this 2016 script](https://github.com/boris-dimitrov/set_gpu_fans_public) by [Boris Dimitrov](dimiroll@gmail.com), which is in turn based on [this 2011 script](https://sites.google.com/site/akohlmey/random-hacks/nvidia-gpu-coolness) by [Axel Kohlmeyer](akohlmey@gmail.com).
+* [Vladimir Iashin](https://github.com/v-iashin) added piecewise linear control
+* [Xun Chen](https://github.com/morfast) fixed the systemctl stop response
