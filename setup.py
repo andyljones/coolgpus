@@ -6,7 +6,7 @@ setup(
     description='GPU fan control for headless Linux',
     url='https://github.com/andyljones/coolgpus',
     author='Andy L Jones',
-    email='andyjones.ed@gmail.com',
+    author_email='andyjones.ed@gmail.com',
     license='MIT',
     scripts=['coolgpus']
     )
