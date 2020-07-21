@@ -25,9 +25,9 @@ args = parser.parse_args()
 
 T_HYST =  args.hyst
 
-assert len(args.temp) == len(args.speed), f'temp and speed should have the same length'
-assert len(args.temp) >= 2, f'Please use at least two points for temp'
-assert len(args.speed) >= 2, f'Please use at least two points for speed'
+assert len(args.temp) == len(args.speed), 'temp and speed should have the same length'
+assert len(args.temp) >= 2, 'Please use at least two points for temp'
+assert len(args.speed) >= 2, 'Please use at least two points for speed'
 
 # EDID for an arbitrary display
 EDID = b'\x00\xff\xff\xff\xff\xff\xff\x00\x10\xac\x15\xf0LTA5.\x13\x01\x03\x804 x\xee\x1e\xc5\xaeO4\xb1&\x0ePT\xa5K\x00\x81\x80\xa9@\xd1\x00qO\x01\x01\x01\x01\x01\x01\x01\x01(<\x80\xa0p\xb0#@0 6\x00\x06D!\x00\x00\x1a\x00\x00\x00\xff\x00C592M9B95ATL\n\x00\x00\x00\xfc\x00DELL U2410\n  \x00\x00\x00\xfd\x008L\x1eQ\x11\x00\n      \x00\x1d'
