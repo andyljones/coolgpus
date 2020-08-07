@@ -85,11 +85,11 @@ def log_output(command, ok=(0,)):
         print('Command launched: ' + ' '.join(command))
     p = Popen(command, stdout=PIPE, stderr=STDOUT)
     try:
+        p.wait(60)
         for line in p.stdout:
             output.append(line.decode().strip())
             if args.verbose:
                 print(line.decode().strip())
-        p.wait(60)
         if args.verbose:
             print('Command finished')
     except TimeoutExpired:
