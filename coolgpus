@@ -21,6 +21,7 @@ parser.add_argument('--temp', nargs='+', default=[55, 80], type=float, help='The
 parser.add_argument('--speed', nargs='+', default=[30, 99], type=float, help='The fan speed ranges')
 parser.add_argument('--hyst', nargs='?', default=2, type=float, help='The hysteresis gap. Large gaps will reduce how often the fan speed is changed, but might mean the fan runs faster than necessary')
 parser.add_argument('--kill', action='store_true', default=False, help='Whether to kill existing Xorg sessions')
+parser.add_argument('--verbose', action='store_true', default=False, help='Whether to print extra debugging information')
 args = parser.parse_args()
 
 T_HYST =  args.hyst
@@ -81,10 +82,14 @@ EndSection
 def log_output(command, ok=(0,)):
     output = []
     try:
+        if args.verbose:
+            print('Running command: ' + ' '.join(command))
         p = Popen(command, stdout=PIPE, stderr=STDOUT)
         for line in p.stdout:
             output.append(line.decode().strip())
         p.wait()
+        if args.verbose:
+            print('Finished command.')
     finally:
         if p.returncode not in ok:
             print('\n'.join(output))
@@ -121,9 +126,11 @@ def config(bus):
 def xserver(display, bus):
     """Starts the X server for a GPU under a certain display ID""" 
     conf = config(bus)
-    args = ['Xorg', display, '-once', '-config', conf]
-    print('Starting xserver: '+' '.join(args))
-    p = Popen(args)
+    xorgargs = ['Xorg', display, '-once', '-config', conf]
+    print('Starting xserver: '+' '.join(xorgargs))
+    p = Popen(xorgargs)
+    if args.verbose:
+        print('Started xserver')
     return p
 
 def xserver_pids():
