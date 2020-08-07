@@ -234,9 +234,9 @@ def manage_fans(displays):
                 temp = temperature(bus)
                 s, l, u = target_speed(speeds[bus], temp)
                 if s != speeds[bus]:
+                    print('GPU {}, {}C -> [{}%-{}%]. Setting speed to {}%'.format(display, temp, l, u, s))
                     set_speed(display, s)
                     speeds[bus] = s
-                    print('GPU {}, {}C -> [{}%-{}%]. Setting speed to {}%'.format(display, temp, l, u, s))
                 else:
                     print('GPU {}, {}C -> [{}%-{}%]. Leaving speed at {}%'.format(display, temp, l, u, s))
             time.sleep(5)
