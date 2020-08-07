@@ -3,7 +3,7 @@ import os
 import re
 import time
 import argparse
-from subprocess import check_output, Popen, PIPE, STDOUT
+from subprocess import TimeoutExpired, check_output, Popen, PIPE, STDOUT
 from tempfile import mkdtemp
 from contextlib import contextmanager
 
@@ -81,19 +81,24 @@ EndSection
 
 def log_output(command, ok=(0,)):
     output = []
+    if args.verbose:
+        print('Command launched: ' + ' '.join(command))
+    p = Popen(command, stdout=PIPE, stderr=STDOUT)
     try:
-        if args.verbose:
-            print('Running command: ' + ' '.join(command))
-        p = Popen(command, stdout=PIPE, stderr=STDOUT)
         for line in p.stdout:
             output.append(line.decode().strip())
-        p.wait()
+            if args.verbose:
+                print(line.decode().strip())
+        p.wait(60)
         if args.verbose:
-            print('Finished command.')
+            print('Command finished')
+    except TimeoutExpired:
+        print('Command timed out: ' + ' '.join(command))
+        raise
     finally:
         if p.returncode not in ok:
             print('\n'.join(output))
-            raise ValueError('Command ' + ' '.join(command) + ' crashed with return code ' + str(p.returncode) + ':')
+            raise ValueError('Command crashed with return code ' + str(p.returncode) + ': ' + ' '.join(command))
         return '\n'.join(output)
 
 def decimalize(bus):
