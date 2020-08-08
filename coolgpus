@@ -22,6 +22,7 @@ parser.add_argument('--speed', nargs='+', default=[30, 99], type=float, help='Th
 parser.add_argument('--hyst', nargs='?', default=2, type=float, help='The hysteresis gap. Large gaps will reduce how often the fan speed is changed, but might mean the fan runs faster than necessary')
 parser.add_argument('--kill', action='store_true', default=False, help='Whether to kill existing Xorg sessions')
 parser.add_argument('--verbose', action='store_true', default=False, help='Whether to print extra debugging information')
+parser.add_argument('--debug', action='store_true', default=False, help='Whether to only start the Xorg subprocesses, and not actually alter the fan speed. This can be useful for debugging.')
 args = parser.parse_args()
 
 T_HYST =  args.hyst
@@ -245,10 +246,21 @@ def manage_fans(displays):
             assign(display, '[gpu:0]/GPUFanControlState=0')
             print('Released fan speed control for GPU at '+display)
 
+def debug_loop(displays):
+    displays = '\n'.join(str(d) + ' - ' + str(b) for b, d in displays.items())
+    print('\n\n\nLOOPING IN DEBUG MODE. DISPLAYS ARE:\n' + displays + '\n\n\n')
+    while True:
+        print('Looping in debug mode')
+        time.sleep(5)
+
+
 def run():
     buses = gpu_buses() 
     with xservers(buses) as displays:
-        manage_fans(displays)
+        if args.debug:
+            debug_loop(displays)
+        else:
+            manage_fans(displays)
 
 if __name__ == '__main__':
     run()
