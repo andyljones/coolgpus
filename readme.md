@@ -61,6 +61,48 @@ sudo systemctl enable coolgpus
 sudo systemctl start coolgpus
 ```
 
+#### Cron task
+
+Sometimes, on some headless computers, a situation emerges that the fan speed is "sticking". To fix it, you can reboot `coolgpus` via cron task. Create a file `cgpujob.sh` and put the following content into it:
+
+```bash
+#!/bin/bash
+
+PID=$(ps aux | grep cgpujob | grep -v $$ | grep -v grep | awk {'print $2'})
+if [ ! -z "${PID}" ]
+then
+        echo "Kill cgpujob: ${PID} (this script pid: $$)"
+        kill -9 ${PID}
+        sleep 3
+fi
+
+
+PID=$(ps aux | grep Xorg | grep -v grep | awk {'print $2'})
+if [ ! -z "${PID}" ]
+then
+        echo "Kill Xorg: ${PID}"
+        kill -9 ${PID}
+        sleep 3
+fi
+
+
+PID=$(ps aux | grep bin/coolgpus | grep -v grep | awk {'print $2'})
+if [ ! -z "${PID}" ]
+then
+        echo "Kill coolgpus: ${PID}"
+        kill -9 ${PID}
+        sleep 3
+fi
+
+/usr/local/bin/coolgpus --kill
+```
+
+Add this file to your crontab and run it every 5 minutes:
+
+```
+*/5 * * * *	/path/to/cgpujob.sh >/dev/null 2>&1
+```
+
 ### Troubleshooting
 * You've got an X server hanging around for some reason: assuming you don't actually need it, run the script with `--kill`, which'll murder any existing X servers and let the script set up its own. Sometimes the OS [might automatically recreate its X servers](https://unix.stackexchange.com/questions/25668/how-to-close-x-server-to-avoid-errors-while-updating-nvidia-driver), and that's [tricky enough to handle that it's up to you to sort out](https://unix.stackexchange.com/questions/25668/how-to-close-x-server-to-avoid-errors-while-updating-nvidia-driver).
 * You've got a display attached: it won't work, but see [this issue](https://github.com/andyljones/coolgpus/issues/1) for progress.
