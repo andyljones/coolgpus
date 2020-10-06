@@ -80,7 +80,7 @@ Now if you're on Windows nvidia happily lets you override that limit by setting 
 This script does all that for you.
 
 ### How it works
-When you run `fans.py`, it sets up a temporary X server for each GPU with a fake display attached. Then, it loops over the GPUs every few seconds and sets the fan speed according to their temperature. When the script dies, it returns control of the fans to the drivers and cleans up the X servers.
+When you run `coolgpus`, it sets up a temporary X server for each GPU with a fake display attached. Then, it loops over the GPUs every few seconds and sets the fan speed according to their temperature. When the script dies, it returns control of the fans to the drivers and cleans up the X servers.
 
 ### Credit
 * This is based on [this 2016 script](https://github.com/boris-dimitrov/set_gpu_fans_public) by [Boris Dimitrov](dimiroll@gmail.com), which is in turn based on [this 2011 script](https://sites.google.com/site/akohlmey/random-hacks/nvidia-gpu-coolness) by [Axel Kohlmeyer](akohlmey@gmail.com).
