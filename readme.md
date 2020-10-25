@@ -15,6 +15,8 @@ This script lets you set a custom GPU fan curve on a headless Linux server.
 +-------------------------------+----------------------+----------------------+
 ```
 
+[It does **not** work on partially-headless servers, where some of the GPUs have displays and some don't](https://github.com/andyljones/coolgpus/issues/1)
+
 ### Instructions
 ```
 pip install coolgpus
@@ -62,8 +64,8 @@ sudo systemctl start coolgpus
 ```
 
 ### Troubleshooting
-* You've got an X server hanging around for some reason: assuming you don't actually need it, run the script with `--kill`, which'll murder any existing X servers and let the script set up its own. Sometimes the OS [might automatically recreate its X servers](https://unix.stackexchange.com/questions/25668/how-to-close-x-server-to-avoid-errors-while-updating-nvidia-driver), and that's [tricky enough to handle that it's up to you to sort out](https://unix.stackexchange.com/questions/25668/how-to-close-x-server-to-avoid-errors-while-updating-nvidia-driver).
 * You've got a display attached: it won't work, but see [this issue](https://github.com/andyljones/coolgpus/issues/1) for progress.
+* You've got an X server hanging around for some reason: assuming you don't actually need it, run the script with `--kill`, which'll murder any existing X servers and let the script set up its own. Sometimes the OS [might automatically recreate its X servers](https://unix.stackexchange.com/questions/25668/how-to-close-x-server-to-avoid-errors-while-updating-nvidia-driver), and that's [tricky enough to handle that it's up to you to sort out](https://unix.stackexchange.com/questions/25668/how-to-close-x-server-to-avoid-errors-while-updating-nvidia-driver).
 * `coolgpus: command not found`: the pip script folder probably isn't on your PATH. On Ubuntu with the apt-get-installed pip, look in `~/.local/bin`.
 * You hit Ctrl+C twice and now your fans are stuck at a certain speed: run the script again and interrupt it _once_, then let it shut down gracefully. Double interrupts stop it from handing control back to the driver. Don't double-interrupt things you barbarian. 
 * General troubleshooting: 
