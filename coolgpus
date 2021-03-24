@@ -23,6 +23,7 @@ parser.add_argument('--hyst', nargs='?', default=2, type=float, help='The hyster
 parser.add_argument('--kill', action='store_true', default=False, help='Whether to kill existing Xorg sessions')
 parser.add_argument('--verbose', action='store_true', default=False, help='Whether to print extra debugging information')
 parser.add_argument('--debug', action='store_true', default=False, help='Whether to only start the Xorg subprocesses, and not actually alter the fan speed. This can be useful for debugging.')
+parser.add_argument('--runonce', action='store_true', default=False, help='Set gpu fan speeds and exit.')
 args = parser.parse_args()
 
 T_HYST =  args.hyst
@@ -224,13 +225,13 @@ def set_speed(display, target):
     assign(display, '[gpu:0]/GPUFanControlState=1')
     assign(display, '[fan:0]/GPUTargetFanSpeed='+str(int(target)))
 
-def manage_fans(displays):
+def manage_fans(displays,runonce):
     """Launches an X server for each GPU, then continually loops over the GPU fans to set their speeds according
     to the GPU temperature. When interrupted, it releases the fan control back to the driver and shuts down the
     X servers"""
     try:
         speeds = {b: 0 for b in displays}
-        while True:
+        def run(displays):
             for bus, display in displays.items():
                 temp = temperature(bus)
                 s, l, u = target_speed(speeds[bus], temp)
@@ -240,7 +241,14 @@ def manage_fans(displays):
                     speeds[bus] = s
                 else:
                     print('GPU {}, {}C -> [{}%-{}%]. Leaving speed at {}%'.format(display, temp, l, u, s))
-            time.sleep(5)
+
+        if runonce:
+            run(displays)
+        else:
+            while True:
+                run(displays)
+                time.sleep(5)
+
     finally:
         for bus, display in displays.items():
             assign(display, '[gpu:0]/GPUFanControlState=0')
@@ -260,7 +268,7 @@ def run():
         if args.debug:
             debug_loop(displays)
         else:
-            manage_fans(displays)
+            manage_fans(displays,args.runonce)
 
 if __name__ == '__main__':
     run()
