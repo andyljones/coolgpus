@@ -1,3 +1,7 @@
+**30/09/21: This is abandonware. I do not have time to maintain it any more, and haven't for some time. It might work for you, in which case great! If not, feel free to post an issue on the tracker but don't expect advice from me or for any future bug fixes to be integrated.**
+
+**If you're reading this and want to commit to maintaining this repo, message me and I'll be happy to hand it over**
+
 This script lets you set a custom GPU fan curve on a headless Linux server.
 
 ```text
