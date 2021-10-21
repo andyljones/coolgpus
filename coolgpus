@@ -228,7 +228,7 @@ def set_speed(display, target):
 
 def set_memory_overclock(display, target):
     # assign(display, '[gpu:0]/GPUGraphicsClockOffset[4]=1')
-    assign(display, '[gpu:0]/GPUMemoryTransferRateOffset[2]=' + str(int(target)))
+    assign(display, '[gpu:0]/GPUMemoryTransferRateOffset[1]=' + str(int(target)))
 
 
 def manage_fans(displays):
