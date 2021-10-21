@@ -1,3 +1,5 @@
+**22/10/21: Updated the options to do both core and memory over-clock, tested on Ubuntu 20.04 with NVIDIA A5000 ( RTX 30 series would works ).**
+
 **30/09/21: This is abandonware. I do not have time to maintain it any more, and haven't for some time. It might work for you, in which case great! If not, feel free to post an issue on the tracker but don't expect advice from me or for any future bug fixes to be integrated.**
 
 **If you're reading this and want to commit to maintaining this repo, message me and I'll be happy to hand it over**
@@ -35,6 +37,14 @@ or you can pass your own fan curve with
 sudo $(which coolgpus) --temp 17 84 --speed 15 99 
 ```
 This will make the fan speed increase linearly from 15% at <17C to 99% at >84C.  You can also increase `--hyst` if you want to smooth out oscillations, at the cost of the fans possibly going faster than they need to.
+
+If you'd like to do over-clock on your Nvidia card, this repo now support it. Just add options `--core_clk [int]` and/or `--memory_transfer_rate [int]` to do the over-clock operation on core and memory. For example:
+```
+sudo $(which coolgpus) --memory_transfer_rate 100 --core_clk 50
+```
+Over-Clocking always dangerous, you may lose warrenty, and also have potential damage on your cards, witch may causes system broken or even fire, we are not responsible for anything related to this function.
+
+ps: It works on RTX 30 series, in legacy Nvidia card, you may set the performace level to 3 or 2 to performe the over-clocking setting properly.
 
 #### Piecewise Linear Control
 More generally, you can list any sequence of (increasing!) temperatures and speeds, and they'll be linearly interpolated:
