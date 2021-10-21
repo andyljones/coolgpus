@@ -25,7 +25,8 @@ This script lets you set a custom GPU fan curve on a headless Linux server.
 
 ### Instructions
 ```
-pip install coolgpus
+git clone https://github.com/Hansxsourse/coolgpus.git
+pip install coolgpus/
 sudo $(which coolgpus) --speed 99 99
 ``` 
 If you hear your server take off, it works! Now interrupt it and re-run either with Sensible Defaults (TM),
