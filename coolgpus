@@ -23,6 +23,9 @@ parser.add_argument('--hyst', nargs='?', default=2, type=float, help='The hyster
 parser.add_argument('--kill', action='store_true', default=False, help='Whether to kill existing Xorg sessions')
 parser.add_argument('--verbose', action='store_true', default=False, help='Whether to print extra debugging information')
 parser.add_argument('--debug', action='store_true', default=False, help='Whether to only start the Xorg subprocesses, and not actually alter the fan speed. This can be useful for debugging.')
+parser.add_argument('--memory_transfer_rate', default=0, type=int, help='Over-clock option, for memory transfer rate over-clock')
+parser.add_argument('--core_clk', default=0, type=int, help='Over-clock option, for core over-clock')
+
 args = parser.parse_args()
 
 T_HYST =  args.hyst
@@ -226,9 +229,9 @@ def set_speed(display, target):
     assign(display, '[gpu:0]/GPUFanControlState=1')
     assign(display, '[fan:0]/GPUTargetFanSpeed='+str(int(target)))
 
-def set_memory_overclock(display, target):
-    # assign(display, '[gpu:0]/GPUGraphicsClockOffset[4]=1')
-    assign(display, '[gpu:0]/GPUMemoryTransferRateOffset[4]=' + str(int(target)))
+def set_memory_overclock(display):
+    assign(display, '[gpu:0]/GPUGraphicsClockOffset[4]='+str(args.core_clk))
+    assign(display, '[gpu:0]/GPUMemoryTransferRateOffset[4]=' + str(args.memory_transfer_rate))
 
 
 def manage_fans(displays):
