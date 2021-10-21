@@ -218,7 +218,7 @@ def target_speed(s, t):
 def assign(display, command):
     # Our duct-taped-together xorg.conf leads to some innocent - but voluminous - warning messages about
     # failing to authenticate. Here we dispose of them
-    log_output(['nvidia-settings'])
+    log_output(['nvidia-settings', '-c', display])
     log_output(['nvidia-settings', '-a', command, '-c', display])
 
 
