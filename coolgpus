@@ -242,7 +242,7 @@ def manage_fans(displays):
                 if s != speeds[bus]:
                     print('GPU {}, {}C -> [{}%-{}%]. Setting speed to {}%'.format(display, temp, l, u, s))
                     set_speed(display, s)
-                    set_memory_overclock(display, 500)
+                    set_memory_overclock(display, 100)
                     speeds[bus] = s
                 else:
                     print('GPU {}, {}C -> [{}%-{}%]. Leaving speed at {}%'.format(display, temp, l, u, s))
