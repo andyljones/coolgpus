@@ -224,6 +224,11 @@ def set_speed(display, target):
     assign(display, '[gpu:0]/GPUFanControlState=1')
     assign(display, '[fan:0]/GPUTargetFanSpeed='+str(int(target)))
 
+def set_memory_overclock(display, target):
+    assign(display, '[gpu:0]/GPUGraphicsClockOffset[4]=0')
+    assign(display, '[gpu:0]/GPUMemoryTransferRateOffset[4]' + str(int(target)))
+
+
 def manage_fans(displays):
     """Launches an X server for each GPU, then continually loops over the GPU fans to set their speeds according
     to the GPU temperature. When interrupted, it releases the fan control back to the driver and shuts down the
@@ -260,7 +265,9 @@ def run():
         if args.debug:
             debug_loop(displays)
         else:
+            set_memory_overclock(displays, 500)
             manage_fans(displays)
+
 
 if __name__ == '__main__':
     run()
