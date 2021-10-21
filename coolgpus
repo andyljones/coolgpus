@@ -48,7 +48,7 @@ Section "Screen"
     Option         "UseDisplayDevice" "DFP-0"
     Option         "ConnectedMonitor" "DFP-0"
     Option         "CustomEDID" "DFP-0:{edid}"
-    Option         "Coolbits" "20"
+    Option         "Coolbits" "28"
     SubSection "Display"
                 Depth   8
                 Modes   "160x200"
@@ -68,7 +68,7 @@ Section "Device"
         Option      "UseDisplayDevice" "DFP-0"
         Option      "ConnectedMonitor" "DFP-0"
         Option      "CustomEDID" "DFP-0:{edid}"
-        Option      "Coolbits" "29"
+        Option      "Coolbits" "28"
         BusID       "PCI:{bus}"
 EndSection
 
@@ -228,7 +228,7 @@ def set_speed(display, target):
 
 def set_memory_overclock(display, target):
     # assign(display, '[gpu:0]/GPUGraphicsClockOffset[4]=1')
-    assign(display, '[gpu:0]/GPUMemoryTransferRateOffset[6]=' + str(int(target)))
+    assign(display, '[gpu:0]/GPUMemoryTransferRateOffset[4]=' + str(int(target)))
 
 
 def manage_fans(displays):
