@@ -102,3 +102,4 @@ When you run `coolgpus`, it sets up a temporary X server for each GPU with a fak
 * This is based on [this 2016 script](https://github.com/boris-dimitrov/set_gpu_fans_public) by [Boris Dimitrov](dimiroll@gmail.com), which is in turn based on [this 2011 script](https://sites.google.com/site/akohlmey/random-hacks/nvidia-gpu-coolness) by [Axel Kohlmeyer](akohlmey@gmail.com).
 * [Vladimir Iashin](https://github.com/v-iashin) added piecewise linear control
 * [Xun Chen](https://github.com/morfast) fixed the systemctl stop response
+* [Lehan Yang](https://github.com/Hansxsourse) added over-clocking functions
