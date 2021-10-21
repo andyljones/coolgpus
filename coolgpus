@@ -225,7 +225,7 @@ def set_speed(display, target):
     assign(display, '[fan:0]/GPUTargetFanSpeed='+str(int(target)))
 
 def set_memory_overclock(display, target):
-    # assign(display, '[gpu:0]/GPUGraphicsClockOffset[4]=1')
+    assign(display, '[gpu:0]/GPUGraphicsClockOffset[4]=1')
     assign(display, '[gpu:0]/GPUMemoryTransferRateOffset[4]=' + str(int(target)))
 
 
