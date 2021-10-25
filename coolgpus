@@ -226,7 +226,7 @@ def assign(display, command):
     log_output(['nvidia-settings', '-a', command, '-c', display])
 
 def power_setting(display, power_limit):
-    log_output(['nvidia-smi -i 0', '-pl', power_limit])
+    log_output(['nvidia-smi', '-pl', power_limit])
 
 
 def set_speed(display, target):
