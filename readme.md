@@ -39,9 +39,9 @@ sudo $(which coolgpus) --temp 17 84 --speed 15 99
 ```
 This will make the fan speed increase linearly from 15% at <17C to 99% at >84C.  You can also increase `--hyst` if you want to smooth out oscillations, at the cost of the fans possibly going faster than they need to.
 
-If you'd like to do over-clock on your Nvidia card, this repo now support it. Just add options `--core_clk [int]` and/or `--memory_transfer_rate [int]` to do the over-clock operation on core and memory. For example:
+If you'd like to do over-clock on your Nvidia card, this repo now support it. Just add options `--core_clk [int]` and/or `--memory_transfer_rate [int]` to do the over-clock operation on core and memory. Also you can add a additional option to control the power limit by using `--power_lim [int]`. Attention, core clock and memory transfer rate option is modifying the offset while power limit is directly set the power limit( it may be failed if the power limit you type is not in the range of your bios allowed ). For example:
 ```
-sudo $(which coolgpus) --memory_transfer_rate 100 --core_clk 50
+sudo $(which coolgpus) --memory_transfer_rate 100 --core_clk 50 --power_lim 130
 ```
 Over-Clocking always dangerous, you may lose warrenty, and also have potential damage on your cards, witch may causes system broken or even fire, we are not responsible for anything related to this function.
 
