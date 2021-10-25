@@ -23,6 +23,10 @@ parser.add_argument('--hyst', nargs='?', default=2, type=float, help='The hyster
 parser.add_argument('--kill', action='store_true', default=False, help='Whether to kill existing Xorg sessions')
 parser.add_argument('--verbose', action='store_true', default=False, help='Whether to print extra debugging information')
 parser.add_argument('--debug', action='store_true', default=False, help='Whether to only start the Xorg subprocesses, and not actually alter the fan speed. This can be useful for debugging.')
+parser.add_argument('--memory_transfer_rate', default=0, type=int, help='Over-clock option, for memory transfer rate over-clock')
+parser.add_argument('--core_clk', default=0, type=int, help='Over-clock option, for core over-clock')
+parser.add_argument('--power_lim', default=0, type=int, help='power limit')
+
 args = parser.parse_args()
 
 T_HYST =  args.hyst
@@ -48,7 +52,7 @@ Section "Screen"
     Option         "UseDisplayDevice" "DFP-0"
     Option         "ConnectedMonitor" "DFP-0"
     Option         "CustomEDID" "DFP-0:{edid}"
-    Option         "Coolbits" "20"
+    Option         "Coolbits" "28"
     SubSection "Display"
                 Depth   8
                 Modes   "160x200"
@@ -68,7 +72,7 @@ Section "Device"
         Option      "UseDisplayDevice" "DFP-0"
         Option      "ConnectedMonitor" "DFP-0"
         Option      "CustomEDID" "DFP-0:{edid}"
-        Option      "Coolbits" "29"
+        Option      "Coolbits" "28"
         BusID       "PCI:{bus}"
 EndSection
 
@@ -218,11 +222,21 @@ def target_speed(s, t):
 def assign(display, command):
     # Our duct-taped-together xorg.conf leads to some innocent - but voluminous - warning messages about
     # failing to authenticate. Here we dispose of them
+    # log_output(['nvidia-settings', '-c', display])
     log_output(['nvidia-settings', '-a', command, '-c', display])
+
+def power_setting(display, power_limit):
+    log_output(['nvidia-smi', '-pl', power_limit])
+
 
 def set_speed(display, target):
     assign(display, '[gpu:0]/GPUFanControlState=1')
     assign(display, '[fan:0]/GPUTargetFanSpeed='+str(int(target)))
+
+def set_memory_overclock(display):
+    assign(display, '[gpu:0]/GPUGraphicsClockOffset[4]='+str(args.core_clk))
+    assign(display, '[gpu:0]/GPUMemoryTransferRateOffset[4]=' + str(args.memory_transfer_rate))
+
 
 def manage_fans(displays):
     """Launches an X server for each GPU, then continually loops over the GPU fans to set their speeds according
@@ -236,7 +250,9 @@ def manage_fans(displays):
                 s, l, u = target_speed(speeds[bus], temp)
                 if s != speeds[bus]:
                     print('GPU {}, {}C -> [{}%-{}%]. Setting speed to {}%'.format(display, temp, l, u, s))
+                    power_setting(display, str(args.power_lim))
                     set_speed(display, s)
+                    set_memory_overclock(display)
                     speeds[bus] = s
                 else:
                     print('GPU {}, {}C -> [{}%-{}%]. Leaving speed at {}%'.format(display, temp, l, u, s))
@@ -261,6 +277,7 @@ def run():
             debug_loop(displays)
         else:
             manage_fans(displays)
+
 
 if __name__ == '__main__':
     run()
