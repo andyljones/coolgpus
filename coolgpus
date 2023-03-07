@@ -221,8 +221,11 @@ def assign(display, command):
     log_output(['nvidia-settings', '-a', command, '-c', display])
 
 def set_speed(display, target):
-    assign(display, '[gpu:0]/GPUFanControlState=1')
-    assign(display, '[fan:0]/GPUTargetFanSpeed='+str(int(target)))
+    if target<=1:
+        assign(display, '[gpu:0]/GPUFanControlState=0')
+    else:
+        assign(display, '[gpu:0]/GPUFanControlState=1')
+        assign(display, '[fan:0]/GPUTargetFanSpeed='+str(int(target)))
 
 def manage_fans(displays):
     """Launches an X server for each GPU, then continually loops over the GPU fans to set their speeds according
