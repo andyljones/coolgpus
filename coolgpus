@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 import os
 import re
 import time
@@ -11,10 +11,10 @@ parser = argparse.ArgumentParser(description=r'''
 GPU fan control for Linux.
 
 By default, this uses a clamped linear fan curve, going from 30% below 55C to 99%
-above 80C. There's also a small hysteresis gap, because _changes_ in fan noise 
-are a lot more distracting than steady fan noise. 
+above 80C. There's also a small hysteresis gap, because _changes_ in fan noise
+are a lot more distracting than steady fan noise.
 
-I can't claim it's optimal, but it Works For My Machine (TM). Full load is about 
+I can't claim it's optimal, but it Works For My Machine (TM). Full load is about
 75C and 80%.
 ''')
 parser.add_argument('--temp', nargs='+', default=[55, 80], type=float, help='The temperature ranges where the fan speed will increase linearly')
@@ -78,7 +78,7 @@ Section "Monitor"
     Modelname       "160x200"
     #Modelname       "1024x768"
 EndSection
-""" 
+"""
 
 def log_output(command, ok=(0,)):
     output = []
@@ -103,7 +103,7 @@ def log_output(command, ok=(0,)):
         return '\n'.join(output)
 
 def decimalize(bus):
-    """Converts a bus ID to an xconf-friendly format by dropping the domain and converting each hex component to 
+    """Converts a bus ID to an xconf-friendly format by dropping the domain and converting each hex component to
     decimal"""
     return ':'.join([str(int('0x' + p, 16)) for p in re.split('[:.]', bus[9:])])
 
@@ -130,7 +130,7 @@ def config(bus):
     return conf
 
 def xserver(display, bus):
-    """Starts the X server for a GPU under a certain display ID""" 
+    """Starts the X server for a GPU under a certain display ID"""
     conf = config(bus)
     xorgargs = ['Xorg', display, '-once', '-config', conf]
     print('Starting xserver: '+' '.join(xorgargs))
@@ -150,7 +150,7 @@ def kill_xservers():
     if servers:
         if args.kill:
             print('Killing all running X servers, including ' + ", ".join(map(str, servers)))
-            log_output(['pkill', 'Xorg'], ok=(0, 1))
+            log_output(['pkill', '-9', 'Xorg'], ok=(0, 1))
             for _ in range(10):
                 if xserver_pids():
                     print('Awaiting X server shutdown')
@@ -163,11 +163,11 @@ def kill_xservers():
             raise IOError('There are already X servers active. Either run the script with the `--kill` switch, or kill them yourself first')
     else:
         print('No existing X servers, we\'re good to go')
-        return 
+        return
 
 @contextmanager
 def xservers(buses):
-    """A context manager for launching an X server for each GPU in a list. Yields the mapping from bus ID to 
+    """A context manager for launching an X server for each GPU in a list. Yields the mapping from bus ID to
     display ID, and cleans up the X servers on exit."""
     kill_xservers()
     displays, servers = {}, {}
@@ -182,7 +182,7 @@ def xservers(buses):
             server.terminate()
 
 def determine_segment(t):
-    '''Determines which piece (segment) of a user-specified piece-wise function 
+    '''Determines which piece (segment) of a user-specified piece-wise function
     t belongs to. For example:
         args.temp = [30, 50, 70, 90]
         (segment 0) 30 (0 segment) 50 (1 segment) 70 (2 segment) 90 (segment 2)
@@ -194,7 +194,7 @@ def determine_segment(t):
     #   b) t belongs to a segment (returns: the segment)
     #   c) t is higher than the max temp (return: the last segment)
     segments = zip(
-            args.temp[:-1], args.temp[1:], 
+            args.temp[:-1], args.temp[1:],
             args.speed[:-1], args.speed[1:])
     for temp_a, temp_b, speed_a, speed_b in segments:
         if t < temp_a:
@@ -220,15 +220,27 @@ def assign(display, command):
     # failing to authenticate. Here we dispose of them
     log_output(['nvidia-settings', '-a', command, '-c', display])
 
+
 def set_speed(display, target):
-    assign(display, '[gpu:0]/GPUFanControlState=1')
-    assign(display, '[fan:0]/GPUTargetFanSpeed='+str(int(target)))
+    # toggle all fans
+    output = log_output(['nvidia-settings', '-q', 'fans', '-c', 'display'])
+    fans = int(re.search(r"^([0-9].*)\sFan", output.strip().split("\n")[0]).group(1))
+
+    for fanId in range(fans):
+        assign(display, f'[fan:{fanId}]/GPUTargetFanSpeed='+str(int(target)))
 
 def manage_fans(displays):
     """Launches an X server for each GPU, then continually loops over the GPU fans to set their speeds according
     to the GPU temperature. When interrupted, it releases the fan control back to the driver and shuts down the
     X servers"""
+    output = log_output(['nvidia-settings', '-q', 'gpus', '-c', 'display'])
+    gpus = int(re.search(r"^([0-9].*)\sGPU", output.strip().split("\n")[0]).group(1))
+
     try:
+        # turn on all gpu fans speed control
+        for bus, display in displays.items():
+            for gpuId in range(gpus): assign(display, f'[gpu:{gpuId}]/GPUFanControlState=1')
+            print('Gain fan speed control for GPU at DISPLAY'+display)
         speeds = {b: 0 for b in displays}
         while True:
             for bus, display in displays.items():
@@ -236,15 +248,16 @@ def manage_fans(displays):
                 s, l, u = target_speed(speeds[bus], temp)
                 if s != speeds[bus]:
                     print('GPU {}, {}C -> [{}%-{}%]. Setting speed to {}%'.format(display, temp, l, u, s))
-                    set_speed(display, s)
+                    set_speed(display,  s)
                     speeds[bus] = s
                 else:
                     print('GPU {}, {}C -> [{}%-{}%]. Leaving speed at {}%'.format(display, temp, l, u, s))
             time.sleep(5)
     finally:
+        # release all gpu fans speed control
         for bus, display in displays.items():
-            assign(display, '[gpu:0]/GPUFanControlState=0')
-            print('Released fan speed control for GPU at '+display)
+            for gpuId in range(gpus): assign(display, f'[gpu:{gpuId}]/GPUFanControlState=0')
+            print('Released fan speed control for GPU at DISPLAY'+display)
 
 def debug_loop(displays):
     displays = '\n'.join(str(d) + ' - ' + str(b) for b, d in displays.items())
@@ -255,7 +268,7 @@ def debug_loop(displays):
 
 
 def run():
-    buses = gpu_buses() 
+    buses = gpu_buses()
     with xservers(buses) as displays:
         if args.debug:
             debug_loop(displays)
